@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>เกมหลบดาว 3 ด่าน</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  text-align: center;
+  font-family: "Kanit", sans-serif;
+  color: #d94b91;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  background:
+    radial-gradient(circle at 15% 10%, #fff0f8 0%, transparent 40%),
+    radial-gradient(circle at 85% 90%, #ffe6f2 0%, transparent 45%),
+    linear-gradient(135deg, #ffd6ec, #ffeef7, #fff5fa);
+  background-attachment: fixed;
+}
+
+body > h2 {
+  margin: 22px 12px 10px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  background: linear-gradient(90deg, #ff4da6, #ff85c1 50%, #ff4da6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 3px #ffb6d988);
+}
+
+#status {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 4px 0 6px;
+}
+
+#status > span {
+  background: #fff;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #ffd1e6;
+  box-shadow: 0 3px 10px #ffb6d955;
+  color: #d94b91;
+  line-height: 1;
+}
+
+#game {
+  width: 90vw;
+  max-width: 360px;
+  height: min(65vh, 480px);
+  min-height: 350px;
+  margin: 14px auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 3px solid #ffb6d9;
+  background:
+    radial-gradient(circle at 50% 0%, #ffffff 0%, #fff5fb 70%),
+    linear-gradient(#fff, #fff5fb);
+  box-shadow:
+    0 10px 30px #ffb6d966,
+    0 3px 8px #ffb6d944,
+    inset 0 0 30px #ffe4f288;
+  touch-action: none;
+  user-select: none;
+}
+
+#game::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: radial-gradient(circle, #ffd6ec 1.2px, transparent 1.2px);
+  background-size: 38px 38px;
+  opacity: .5;
+  pointer-events: none;
+}
+
+/* ===== ปุ่มหยุด ===== */
+.pause-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 2px solid #ffd6ec;
+  background: #fff;
+  color: #ff4da6;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 4px 10px #ffb6d966;
+  transition: transform .15s ease, box-shadow .2s ease;
+  font-family: inherit;
+}
+.pause-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 14px #ffb6d988;
+}
+.pause-btn:active {
+  transform: scale(.92);
+}
+
+#player {
+  width: 42px;
+  height: 42px;
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  background: url('https://i.pinimg.com/originals/04/49/e1/0449e1cfd9ac3c8b625e3b794b50d7b1.jpg') center/contain no-repeat;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px #ff66b255);
+  z-index: 2;
+}
+
+.obstacle {
+  width: 38px;
+  height: 38px;
+  position: absolute;
+  top: -40px;
+  background: url('https://cdn-icons-png.flaticon.com/512/1828/1828884.png') center/contain no-repeat;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 5px #ffd16688);
+  z-index: 2;
+}
+
+#gameHint {
+  font-size: 13px;
+  color: #c879a1;
+  font-weight: 500;
+  margin: 4px 12px 24px;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  padding: 13px 26px;
+  margin: 6px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff85c1, #ff4da6);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px #ff66b255, 0 2px 4px #ff4da633;
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+  touch-action: manipulation;
+}
+
+.btn:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 9px 22px #ff66b277, 0 2px 4px #ff4da633;
+}
+
+.btn:active {
+  transform: scale(.95);
+  box-shadow: 0 3px 10px #ff66b255;
+}
+
+#popup, #intro {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,192,203,.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  padding: 20px;
+}
+
+#popup {
+  display: none;
+}
+
+.box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  padding: 28px 22px;
+  border-radius: 28px;
+  border: 2px solid #ffd6ec;
+  box-shadow:
+    0 14px 40px #e98ab555,
+    0 2px 8px #e98ab533,
+    inset 0 0 0 1px #ffeaf4;
+  animation: appear .35s cubic-bezier(.2, .9, .3, 1.35);
+}
+
+.box h2 {
+  color: #ff4da6;
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+
+.box p {
+  line-height: 1.85;
+  color: #a65b83;
+  font-size: 15px;
+  font-weight: 400;
+  margin: 0 0 4px;
+}
+
+@keyframes appear {
+  from { transform: scale(.85); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+@media (max-width: 400px) {
+  #game { width: 92vw; }
+  body > h2 { font-size: 23px; }
+  #status { font-size: 14px; }
+}
+</style>
+</head>
+
+<body>
+
+<h2>🐱 เกมหลบดาว 3 ด่าน 💖</h2>
+
+<div id="status">
+  <span id="level">ด่าน 1</span>
+  <span>⏳ <span id="time">15</span> วิ</span>
+</div>
+
+<div id="game">
+  <button id="pauseBtn" class="pause-btn"
+          onclick="pauseGame()"
+          onpointerdown="event.stopPropagation()"
+          aria-label="หยุดชั่วคราว">⏸️</button>
+  <div id="player"></div>
+</div>
+
+<p id="gameHint">👆 ลากนิ้วซ้าย-ขวาเพื่อบังคับแมว</p>
+
+<audio id="startSound" src="start.mp3" preload="auto"></audio>
+
+<div id="intro">
+  <div class="box">
+    <h2>🎮 เกมหลบดาวคืออะไร?</h2>
+    <p>
+      ยินดีต้อนรับสู่เกมของเราา<br><br>
+      🐱 บังคับเจ้าแมวให้หลบดาว<br>
+       มีทั้งหมด 3 ด่าน<br>
+       ต้องเอาชีวิตรอดให้ครบ 15 วินาทีต่อด่าน<br>
+       ยิ่งด่านสูงยิ่งยากขึ้น!<br><br>
+       ถ้าชนะครบสามด่าน<br>
+      เธอเลือกได้ว่าจะคุยกับเราหรือไม่<br><br>
+       แต่ถ้าแพ้เธอต้องยอมคุยกะเราา 
+    </p>
+    <button class="btn" onclick="startGame()">เริ่มเกม 🚀</button>
+  </div>
+</div>
+
+<div id="popup">
+  <div class="box">
+    <h2 id="popupText"></h2>
+    <p id="popupMessage"></p>
+    <div id="popupButtons"></div>
+  </div>
+</div>
+
+<script>
+const player = document.getElementById("player");
+const game = document.getElementById("game");
+const popup = document.getElementById("popup");
+const sound = document.getElementById("startSound");
+
+let level = 1;
+let time = 15;
+let playing = false;
+let speed = 5;
+let playerX = 0;
+
+let spawnTimer = null;
+let countdownTimer = null;
+let obstacleTimers = [];
+
+const PLAYER_SIZE = 42;
+const OBSTACLE_SIZE = 38;
+
+function resetPlayer() {
+  playerX = (game.clientWidth - PLAYER_SIZE) / 2;
+  player.style.left = playerX + "px";
+}
+
+function startGame() {
+  document.getElementById("intro").style.display = "none";
+
+  sound.volume = 0.25;
+  sound.currentTime = 0;
+
+  sound.play().catch(() => {});
+
+  level = 1;
+  time = 15;
+  speed = 3;
+
+  updateStatus();
+  resetPlayer();
+
+  playing = true;
+
+  startCountdown();
+  spawn();
+}
+
+function updateStatus() {
+  document.getElementById("level").innerText = "ด่าน " + level;
+  document.getElementById("time").innerText = time;
+}
+
+document.addEventListener("keydown", e => {
+  if (!playing) return;
+
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+  }
+
+  if (e.key === "ArrowLeft") movePlayer(playerX - 25);
+  if (e.key === "ArrowRight") movePlayer(playerX + 25);
+});
+
+game.addEventListener("pointerdown", e => {
+  if (!playing || e.pointerType === "mouse") return;
+  e.preventDefault();
+  game.setPointerCapture(e.pointerId);
+  moveByPointer(e);
+});
+
+game.addEventListener("pointermove", e => {
+  if (!playing || e.pointerType === "mouse" || !game.hasPointerCapture(e.pointerId)) return;
+  e.preventDefault();
+  moveByPointer(e);
+});
+
+function moveByPointer(e) {
+  const rect = game.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  movePlayer(x - PLAYER_SIZE / 2);
+}
+
+function movePlayer(x) {
+  const max = game.clientWidth - PLAYER_SIZE;
+
+  playerX = Math.max(0, Math.min(x, max));
+  player.style.left = playerX + "px";
+}
+
+function spawn() {
+  if (!playing) return;
+
+  const obs = document.createElement("div");
+  obs.className = "obstacle";
+
+  const maxX = game.clientWidth - OBSTACLE_SIZE;
+  obs.style.left = Math.random() * maxX + "px";
+
+  game.appendChild(obs);
+
+  let top = -OBSTACLE_SIZE;
+  let stopped = false;
+
+  const fall = setInterval(() => {
+    if (!playing || stopped) {
+      clearInterval(fall);
+      obs.remove();
+      return;
+    }
+
+    top += speed;
+    obs.style.top = top + "px";
+
+    const p = player.getBoundingClientRect();
+    const o = obs.getBoundingClientRect();
+
+    if (
+      o.bottom > p.top + 5 &&
+      o.top < p.bottom - 5 &&
+      o.left < p.right - 5 &&
+      o.right > p.left + 5
+    ) {
+      stopped = true;
+      clearInterval(fall);
+      obs.remove();
+      lose();
+      return;
+    }
+
+    if (top > game.clientHeight) {
+      clearInterval(fall);
+      obs.remove();
+    }
+
+  }, 20);
+
+  obstacleTimers.push(fall);
+
+let delay = level === 1 ? 650 : level === 2 ? 400 : 250;
+
+  spawnTimer = setTimeout(spawn, delay);
+}
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+
+  countdownTimer = setInterval(() => {
+    if (!playing) return;
+
+    time--;
+    updateStatus();
+
+    if (time <= 0) {
+      nextLevel();
+    }
+  }, 1000);
+}
+
+function nextLevel() {
+  if (level < 3) {
+    level++;
+
+    time = 15;
+
+    if (level === 2) speed = 6;
+    if (level === 3) speed = 9;
+
+    updateStatus();
+
+    clearTimeout(spawnTimer);
+    spawn();
+  } else {
+    winGame();
+  }
+}
+
+function stopGame() {
+  playing = false;
+
+  clearTimeout(spawnTimer);
+  clearInterval(countdownTimer);
+
+  obstacleTimers.forEach(timer => clearInterval(timer));
+  obstacleTimers = [];
+
+  sound.pause();
+  sound.currentTime = 0;
+
+  game.querySelectorAll(".obstacle").forEach(obs => obs.remove());
+}
+
+/* ===== ฟังก์ชันใหม่: หยุดชั่วคราว ===== */
+function pauseGame() {
+  if (!playing) return;
+
+  stopGame();
+
+  document.getElementById("popupText").innerText = "หยุดพักก่อนน้าา ⏸️";
+  document.getElementById("popupMessage").innerText =
+    "จะกลับไปหน้าแรก หรือเริ่มเล่นใหม่ตั้งแต่ด่าน 1 ดี?";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="finishGame()">ออก 🚪</button>
+    <button class="btn" onclick="restart()">เริ่มใหม่ 🔄</button>
+  `;
+
+  popup.style.display = "flex";
+}
+
+function lose() {
+  if (!playing) return;
+
+  stopGame();
+
+  document.getElementById("popupText").innerText = "แพ้แล้วน้าา 55555";
+  document.getElementById("popupMessage").innerText =
+    "ไม่เป็นไรน้าา แต่แพ้แล้วต้องคุยกันแล้วนะะะะ";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="goIG()">ยอมคุยยเลยยยย</button>
+    <button class="btn" onclick="restart()">เล่นใหม่ก็ได้นะะ55555</button>
+  `;
+
+  popup.style.display = "flex";
+}
+
+function winGame() {
+  stopGame();
+
+  document.getElementById("popupText").innerText = "เก่งมากเลยย!";
+  document.getElementById("popupMessage").innerText =
+    "เธอผ่านครบทั้ง 3 ด่านแล้ว เก่งมากกอ่ะะ";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="goIG()">คุยกัน 💌</button>
+    <button class="btn" onclick="closeGame()">ออกกกกละะ</button>
+  `;
+
+  popup.style.display = "flex";
+}
+
+function closeGame() {
+  document.getElementById("popupText").innerText =
+    "รอบหน้าจะมาจีบใหม่ เราไม่ยอมหรอกก";
+
+  document.getElementById("popupMessage").innerText =
+    "ฝากไว้ก่อนนนนนนน";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="finishGame()">พออๆ อออก</button>
+    <button class="btn" onclick="restart()">เล่นใหม่ก็ได้นะะ555</button>
+  `;
+}
+
+function finishGame() {
+  popup.style.display = "none";
+  document.getElementById("intro").style.display = "flex";
+}
+
+function restart() {
+  stopGame();
+
+  level = 1;
+  time = 15;
+  speed = 2;
+
+  updateStatus();
+  resetPlayer();
+
+  popup.style.display = "none";
+  startGame();
+}
+
+function goIG() {
+  window.location.href = "qr.html";
+}
+
+resetPlayer();
+</script>
+
+</body>
+</html>
