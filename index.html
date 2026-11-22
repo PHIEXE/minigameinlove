@@ -384,8 +384,8 @@ let spawnTimer = null;
 let countdownTimer = null;
 let obstacleTimers = [];
 
-const PLAYER_SIZE = 42;
-const OBSTACLE_SIZE = 38;
+const PLAYER_SIZE = 40;
+const OBSTACLE_SIZE = 40;
 
 function resetPlayer() {
   playerX = (game.clientWidth - PLAYER_SIZE) / 2;
@@ -402,7 +402,7 @@ function startGame() {
 
   level = 1;
   time = 15;
-  speed = 3;
+  speed = 5;
 
   updateStatus();
   resetPlayer();
@@ -504,7 +504,7 @@ function spawn() {
 
   obstacleTimers.push(fall);
 
-let delay = level === 1 ? 650 : level === 2 ? 400 : 250;
+let delay = level === 1 ? 400 : level === 2 ? 250 : 150;
 
   spawnTimer = setTimeout(spawn, delay);
 }
@@ -530,8 +530,8 @@ function nextLevel() {
 
     time = 15;
 
-    if (level === 2) speed = 6;
-    if (level === 3) speed = 9;
+    if (level === 2) speed = 7;
+    if (level === 3) speed = 10;
 
     updateStatus();
 
