@@ -1,0 +1,471 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>เกมหลบดาว 3 ด่าน</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  text-align: center;
+  font-family: "Kanit", sans-serif;
+  background: linear-gradient(135deg,#ffd6ec,#ffeef7,#fff5fa);
+  color: #d94b91;
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+h2 {
+  margin-top: 20px;
+}
+
+#status {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+#game {
+  width: 90vw;
+  max-width: 360px;
+  height: min(65vh, 480px);
+  min-height: 350px;
+  background: linear-gradient(#fff,#fff5fb);
+  margin: 15px auto;
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  border: 3px solid #ffb6d9;
+  box-shadow: 0 5px 20px #ffb6d966;
+  touch-action: none;
+  user-select: none;
+}
+
+#player {
+  width: 42px;
+  height: 42px;
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  background: url('https://cdn-icons-png.flaticon.com/512/616/616430.png') center/contain no-repeat;
+  pointer-events: none;
+}
+
+.obstacle {
+  width: 38px;
+  height: 38px;
+  position: absolute;
+  top: -40px;
+  background: url('https://cdn-icons-png.flaticon.com/512/1828/1828884.png') center/contain no-repeat;
+  pointer-events: none;
+}
+
+#gameHint {
+  font-size: 13px;
+  color: #c879a1;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 18px;
+  padding: 12px 24px;
+  margin: 6px;
+  border: none;
+  border-radius: 15px;
+  background: #ff66b2;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 8px #ff66b244;
+  touch-action: manipulation;
+}
+
+.btn:active {
+  transform: scale(.95);
+}
+
+#popup, #intro {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,192,203,.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  padding: 20px;
+}
+
+#popup {
+  display: none;
+}
+
+.box {
+  width: 100%;
+  max-width: 340px;
+  background: white;
+  padding: 25px 20px;
+  border-radius: 25px;
+  box-shadow: 0 8px 25px #e98ab555;
+  animation: appear .3s ease;
+}
+
+.box h2 {
+  color: #ff4da6;
+  margin-top: 0;
+}
+
+.box p {
+  line-height: 1.8;
+  color: #a65b83;
+}
+
+@keyframes appear {
+  from { transform: scale(.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media(max-width: 400px) {
+  #game {
+    width: 92vw;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h2>🐱 เกมหลบดาว 3 ด่าน 💖</h2>
+
+<div id="status">
+  <span id="level">ด่าน 1</span>
+  <span>⏳ <span id="time">15</span> วิ</span>
+</div>
+
+<div id="game">
+  <div id="player"></div>
+</div>
+
+<p id="gameHint">👆 ลากนิ้วซ้าย-ขวาเพื่อบังคับแมว</p>
+
+<!-- เพลงเริ่มเกม -->
+<audio id="startSound" src="start.mp3" preload="auto"></audio>
+
+<!-- หน้าเริ่มต้น -->
+<div id="intro">
+  <div class="box">
+    <h2>🎮 เกมหลบดาวคืออะไร?</h2>
+    <p>
+      ยินดีต้อนรับสู่เกมของเราา<br><br>
+      🐱 บังคับเจ้าแมวให้หลบดาว<br>
+       มีทั้งหมด 3 ด่าน<br>
+       ต้องเอาชีวิตรอดให้ครบ 15 วินาทีต่อด่าน<br>
+       ยิ่งด่านสูงยิ่งยากขึ้น!<br><br>
+       ถ้าชนะครบสามด่าน<br>
+      เธอเลือกได้ว่าจะคุยกับเราหรือไม่<br><br>
+       แต่ถ้าแพ้เธอต้องยอมคุยกะเราา 
+    </p>
+    <button class="btn" onclick="startGame()">เริ่มเกม 🚀</button>
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="popup">
+  <div class="box">
+    <h2 id="popupText"></h2>
+    <p id="popupMessage"></p>
+    <div id="popupButtons"></div>
+  </div>
+</div>
+
+<script>
+const player = document.getElementById("player");
+const game = document.getElementById("game");
+const popup = document.getElementById("popup");
+const sound = document.getElementById("startSound");
+
+let level = 1;
+let time = 15;
+let playing = false;
+let speed = 2;
+let playerX = 0;
+
+let spawnTimer = null;
+let countdownTimer = null;
+let obstacleTimers = [];
+
+const PLAYER_SIZE = 42;
+const OBSTACLE_SIZE = 38;
+
+// วางแมวตรงกลาง
+function resetPlayer() {
+  playerX = (game.clientWidth - PLAYER_SIZE) / 2;
+  player.style.left = playerX + "px";
+}
+
+// เริ่มเกม
+function startGame() {
+  document.getElementById("intro").style.display = "none";
+
+  sound.volume = 0.25;
+  sound.currentTime = 0;
+
+  sound.play().catch(() => {});
+
+  level = 1;
+  time = 15;
+  speed = 2;
+
+  updateStatus();
+  resetPlayer();
+
+  playing = true;
+
+  startCountdown();
+  spawn();
+}
+
+// อัปเดตเวลาและด่าน
+function updateStatus() {
+  document.getElementById("level").innerText = "ด่าน " + level;
+  document.getElementById("time").innerText = time;
+}
+
+// ควบคุมด้วยคีย์บอร์ด
+document.addEventListener("keydown", e => {
+  if (!playing) return;
+
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+  }
+
+  if (e.key === "ArrowLeft") movePlayer(playerX - 25);
+  if (e.key === "ArrowRight") movePlayer(playerX + 25);
+});
+
+// ควบคุมด้วยการลากนิ้ว
+game.addEventListener("pointerdown", e => {
+  if (!playing || e.pointerType === "mouse") return;
+  e.preventDefault();
+  game.setPointerCapture(e.pointerId);
+  moveByPointer(e);
+});
+
+game.addEventListener("pointermove", e => {
+  if (!playing || e.pointerType === "mouse" || !game.hasPointerCapture(e.pointerId)) return;
+  e.preventDefault();
+  moveByPointer(e);
+});
+
+function moveByPointer(e) {
+  const rect = game.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  movePlayer(x - PLAYER_SIZE / 2);
+}
+
+function movePlayer(x) {
+  const max = game.clientWidth - PLAYER_SIZE;
+
+  playerX = Math.max(0, Math.min(x, max));
+  player.style.left = playerX + "px";
+}
+
+// สร้างดาว
+function spawn() {
+  if (!playing) return;
+
+  const obs = document.createElement("div");
+  obs.className = "obstacle";
+
+  const maxX = game.clientWidth - OBSTACLE_SIZE;
+  obs.style.left = Math.random() * maxX + "px";
+
+  game.appendChild(obs);
+
+  let top = -OBSTACLE_SIZE;
+  let stopped = false;
+
+  const fall = setInterval(() => {
+    if (!playing || stopped) {
+      clearInterval(fall);
+      obs.remove();
+      return;
+    }
+
+    top += speed;
+    obs.style.top = top + "px";
+
+    const p = player.getBoundingClientRect();
+    const o = obs.getBoundingClientRect();
+
+    // ตรวจจับการชน
+    if (
+      o.bottom > p.top + 5 &&
+      o.top < p.bottom - 5 &&
+      o.left < p.right - 5 &&
+      o.right > p.left + 5
+    ) {
+      stopped = true;
+      clearInterval(fall);
+      obs.remove();
+      lose();
+      return;
+    }
+
+    if (top > game.clientHeight) {
+      clearInterval(fall);
+      obs.remove();
+    }
+
+  }, 20);
+
+  obstacleTimers.push(fall);
+
+  // ความยากแต่ละด่าน
+  let delay = level === 1 ? 1100 : level === 2 ? 700 : 350;
+
+  spawnTimer = setTimeout(spawn, delay);
+}
+
+// นับถอยหลัง
+function startCountdown() {
+  clearInterval(countdownTimer);
+
+  countdownTimer = setInterval(() => {
+    if (!playing) return;
+
+    time--;
+    updateStatus();
+
+    if (time <= 0) {
+      nextLevel();
+    }
+  }, 1000);
+}
+
+// ไปด่านต่อไป
+function nextLevel() {
+  if (level < 3) {
+    level++;
+
+    time = 15;
+
+    if (level === 2) speed = 3.5;
+    if (level === 3) speed = 6;
+
+    updateStatus();
+
+    // เริ่มระบบสร้างดาวใหม่ตามความเร็วของด่าน
+    clearTimeout(spawnTimer);
+    spawn();
+  } else {
+    winGame();
+  }
+}
+
+// หยุดเกมและเสียง
+function stopGame() {
+  playing = false;
+
+  clearTimeout(spawnTimer);
+  clearInterval(countdownTimer);
+
+  obstacleTimers.forEach(timer => clearInterval(timer));
+  obstacleTimers = [];
+
+  sound.pause();
+  sound.currentTime = 0;
+
+  game.querySelectorAll(".obstacle").forEach(obs => obs.remove());
+}
+
+// แพ้
+function lose() {
+  if (!playing) return;
+
+  stopGame();
+
+  document.getElementById("popupText").innerText = "แพ้แล้วน้าา 55555";
+  document.getElementById("popupMessage").innerText =
+    "ไม่เป็นไรน้าา แต่แพ้แล้วต้องคุยกันแล้วนะะะะ";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="goIG()">ยอมคุยยเลยยยย</button>
+    <button class="btn" onclick="restart()">เล่นใหม่ก็ได้นะะ55555</button>
+  `;
+
+  popup.style.display = "flex";
+}
+
+// ชนะทั้งหมด
+function winGame() {
+  stopGame();
+
+  document.getElementById("popupText").innerText = "เก่งมากเลยย!";
+  document.getElementById("popupMessage").innerText =
+    "เธอผ่านครบทั้ง 3 ด่านแล้ว เก่งมากกอ่ะะ";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="goIG()">คุยกัน 💌</button>
+    <button class="btn" onclick="closeGame()">ออกกกกละะ</button>
+  `;
+
+  popup.style.display = "flex";
+}
+
+// กดออก
+function closeGame() {
+  document.getElementById("popupText").innerText =
+    "รอบหน้าจะมาจีบใหม่ เราไม่ยอมหรอกก";
+
+  document.getElementById("popupMessage").innerText =
+    "ฝากไว้ก่อนนนนนนน";
+
+  document.getElementById("popupButtons").innerHTML = `
+    <button class="btn" onclick="finishGame()">พออๆ อออก</button>
+    <button class="btn" onclick="restart()">เล่นใหม่ก็ได้นะะ555</button>
+  `;
+}
+
+// จบเกม
+function finishGame() {
+  popup.style.display = "none";
+}
+
+// เล่นใหม่
+function restart() {
+  stopGame();
+
+  level = 1;
+  time = 15;
+  speed = 2;
+
+  updateStatus();
+  resetPlayer();
+
+  popup.style.display = "none";
+  startGame();
+}
+
+// ไปหน้า QR
+function goIG() {
+  window.location.href = "qr.html";
+}
+
+// เริ่มต้น
+resetPlayer();
+</script>
+
+</body>
+</html>
