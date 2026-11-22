@@ -27,8 +27,57 @@ h2 {
   filter: drop-shadow(0 2px 3px #ffb6d988);
 }
 
-#selectScreen {
+/* ===== LOGIN ===== */
+#loginScreen {
   display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100vh; padding: 20px;
+}
+.login-box {
+  width: 100%; max-width: 340px; padding: 32px 22px 26px;
+  background: #fff; border-radius: 28px; border: 2px solid #ffd6ec;
+  box-shadow: 0 14px 40px #e98ab555, 0 2px 8px #e98ab533, inset 0 0 0 1px #ffeaf4;
+  animation: appear .35s cubic-bezier(.2, .9, .3, 1.35);
+}
+.login-icon { font-size: 56px; line-height: 1; margin-bottom: 8px; }
+.login-box h2 {
+  margin: 0 0 6px; font-size: 22px; color: #ff4da6;
+  font-weight: 700; background: none; -webkit-text-fill-color: currentColor; filter: none;
+}
+.login-box p { margin: 0 0 16px; font-size: 14px; color: #a65b83; }
+
+#nameInput {
+  width: 100%; padding: 14px 18px; font-size: 16px; font-family: inherit;
+  border: 2px solid #ffd6ec; border-radius: 14px; outline: none;
+  background: #fff9fc; color: #d94b91; font-weight: 500;
+  text-align: center; transition: border-color .2s ease, box-shadow .2s ease;
+}
+#nameInput:focus {
+  border-color: #ff85c1;
+  box-shadow: 0 0 0 4px #ffd6ec66;
+  background: #fff;
+}
+#nameInput::placeholder { color: #d9a5bb; font-weight: 400; }
+
+#loginError {
+  min-height: 22px; margin-top: 8px;
+  font-size: 13px; color: #ef4444; font-weight: 500;
+}
+
+.login-box .btn { width: 100%; margin-top: 6px; }
+
+.shake-login { animation: shakeLogin .35s ease-in-out; }
+@keyframes shakeLogin {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* ===== GAME SELECT ===== */
+#selectScreen {
+  display: none;
+  flex-direction: column; align-items: center;
   justify-content: center; min-height: 100vh; padding: 20px;
 }
 .game-cards {
@@ -307,6 +356,19 @@ h2 {
 
 <body>
 
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen">
+  <div class="login-box" id="loginBox">
+    <div class="login-icon">🔒</div>
+    <h2>ใส่ชื่อไอจีเธอเพื่อเข้าเล่น</h2>
+    <p>พิมพ์ชื่อให้ถูกนะ</p>
+    <input id="nameInput" type="text" placeholder="พิมพ์ชื่อ..." autocomplete="off" spellcheck="false" />
+    <div id="loginError"></div>
+    <button class="btn" onclick="checkName()">เข้าเล่น 🚪</button>
+  </div>
+</div>
+
+<!-- ============ SELECT SCREEN ============ -->
 <div id="selectScreen">
   <h2>เลือกเกมที่จะเล่น 🎮</h2>
   <div class="game-cards">
@@ -325,6 +387,7 @@ h2 {
   </div>
 </div>
 
+<!-- ============ DODGE GAME ============ -->
 <div id="dodgeContainer">
   <h2>🐱 เกมหลบดาว 3 ด่าน 💖</h2>
   <div id="status">
@@ -357,11 +420,12 @@ h2 {
   </div>
 </div>
 
+<!-- ============ WHACK GAME ============ -->
 <div id="whackContainer">
   <h2>🐭 เกมกดแมวโผล่ 🎯</h2>
   <div id="whackStatus">
     <span id="whackLevel">ด่าน 1/5</span>
-    <span>🎯 <span id="whackScore">0</span>/<span id="whackGoal">12</span></span>
+    <span>🎯 <span id="whackScore">0</span>/<span id="whackGoal">15</span></span>
     <span>⏳ <span id="whackTime">20</span> วิ</span>
     <span id="whackLives">❤️❤️❤️</span>
   </div>
@@ -388,6 +452,7 @@ h2 {
   </div>
 </div>
 
+<!-- ============ SHARED POPUP ============ -->
 <div id="popup">
   <div class="box">
     <h2 id="popupText"></h2>
@@ -397,6 +462,67 @@ h2 {
 </div>
 
 <script>
+/* ==========================================================
+   🔐 LOGIN SYSTEM
+   ========================================================== */
+
+const SECRET_NAME = "aomsiino";
+
+// ตั้งค่า: true = ไม่สนตัวพิมพ์เล็ก/ใหญ่, false = ต้องตรงเป๊ะ
+const CASE_INSENSITIVE = false;
+
+function checkName() {
+  const input = document.getElementById("nameInput");
+  const err = document.getElementById("loginError");
+  const box = document.getElementById("loginBox");
+  const v = input.value.trim();
+
+  err.textContent = "";
+  box.classList.remove("shake-login");
+  void box.offsetWidth;
+
+  if (v === "") {
+    err.textContent = "ยังไม่ได้พิมพ์ชื่อเลยน้าา ";
+    box.classList.add("shake-login");
+    input.focus();
+    return;
+  }
+
+  const isMatch = CASE_INSENSITIVE
+    ? v.toLowerCase() === SECRET_NAME.toLowerCase()
+    : v === SECRET_NAME;
+
+  if (!isMatch) {
+    err.textContent = "ชื่อไม่ถูกต้องน้าา ลองใหม่นะ 💔";
+    box.classList.add("shake-login");
+    input.value = "";
+    input.focus();
+    return;
+  }
+
+  // ✅ ถูก → เข้าได้
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("selectScreen").style.display = "flex";
+}
+
+// กด Enter ในช่อง input
+document.getElementById("nameInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    checkName();
+  }
+});
+
+// clear error เมื่อผู้เล่นพิมพ์ใหม่
+document.getElementById("nameInput").addEventListener("input", () => {
+  document.getElementById("loginError").textContent = "";
+});
+
+// focus อัตโนมัติตอนโหลด
+window.addEventListener("load", () => {
+  setTimeout(() => document.getElementById("nameInput").focus(), 200);
+});
+
 /* ==========================================================
    SHARED POPUP
    ========================================================== */
@@ -642,11 +768,11 @@ function goIG() {
    WHACK GAME
    ========================================================== */
 const WHACK_LEVELS = [
-  { goal: 18, time: 20, spawnDelay: 450, itemLife: 700, bombChance: 0.18, heartChance: 0.15 },
-  { goal: 26, time: 18, spawnDelay: 380, itemLife: 600, bombChance: 0.22, heartChance: 0.15 },
-  { goal: 32, time: 23, spawnDelay: 320, itemLife: 560, bombChance: 0.25, heartChance: 0.15 },
-  { goal: 38, time: 28, spawnDelay: 300, itemLife: 560, bombChance: 0.28, heartChance: 0.16 },
-  { goal: 40, time: 35, spawnDelay: 295, itemLife: 560, bombChance: 0.29, heartChance: 0.17 }
+  { goal: 15, time: 20, spawnDelay: 550, itemLife: 850, bombChance: 0.15, heartChance: 0.15 },
+  { goal: 22, time: 20, spawnDelay: 470, itemLife: 750, bombChance: 0.20, heartChance: 0.15 },
+  { goal: 28, time: 18, spawnDelay: 400, itemLife: 650, bombChance: 0.22, heartChance: 0.15 },
+  { goal: 34, time: 18, spawnDelay: 340, itemLife: 570, bombChance: 0.25, heartChance: 0.18 },
+  { goal: 40, time: 18, spawnDelay: 280, itemLife: 500, bombChance: 0.28, heartChance: 0.20 }
 ];
 
 const whackState = {
@@ -683,15 +809,12 @@ function startWhackLevel() {
   startWhackTimers();
 }
 
-/* ⬇️ แยก timers ออกมาเป็นฟังก์ชัน เพื่อ reuse ตอน resume */
 function startWhackTimers() {
   whackState.countdownTimer = setInterval(() => {
     if (!whackState.playing) return;
     whackState.time--;
     updateWhackUI();
-    if (whackState.time <= 0) {
-      whackFail("หมดเวลาแล้วน้าา 😢");
-    }
+    if (whackState.time <= 0) whackFail("หมดเวลาแล้วน้าา 😢");
   }, 1000);
   scheduleWhackSpawn();
 }
@@ -856,7 +979,6 @@ function whackStop() {
   clearWhackTimers();
 }
 
-/* ⬇️ pause: มีปุ่ม "เล่นต่อ" เพิ่ม */
 function whackPause() {
   if (!whackState.playing) return;
   whackState.playing = false;
@@ -873,11 +995,9 @@ function whackPause() {
   );
 }
 
-/* ⬇️ resume: กลับมาเล่นต่อจาก state เดิม */
 function whackResume() {
   hidePopup();
   if (whackState.playing) return;
-  // safety: ถ้า state ไม่ครบ (เช่นเคยออกไปแล้ว) ให้เริ่มด่านใหม่
   if (whackState.goal === 0 || whackState.time <= 0 || whackState.lives <= 0) {
     startWhackLevel();
     return;
