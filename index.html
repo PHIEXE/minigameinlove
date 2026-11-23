@@ -697,7 +697,7 @@ function spawn() {
     if (top > game.clientHeight) { clearInterval(fall); obs.remove(); }
   }, 20);
   obstacleTimers.push(fall);
-  const delay = level === 1 ? 400 : level === 2 ? 250 : 150;
+  const delay = level === 1 ? 400 : level === 2 ? 220 : 55;
   spawnTimer = setTimeout(spawn, delay);
 }
 function startCountdown() {
@@ -772,7 +772,7 @@ const WHACK_LEVELS = [
   { goal: 22, time: 20, spawnDelay: 470, itemLife: 750, bombChance: 0.20, heartChance: 0.15 },
   { goal: 28, time: 26, spawnDelay: 400, itemLife: 650, bombChance: 0.22, heartChance: 0.15 },
   { goal: 34, time: 28, spawnDelay: 340, itemLife: 570, bombChance: 0.25, heartChance: 0.18 },
-  { goal: 40, time: 38, spawnDelay: 280, itemLife: 500, bombChance: 0.28, heartChance: 0.20 }
+  { goal: 55, time: 20, spawnDelay: 120, itemLife: 260, bombChance: 0.45, heartChance: 0.10 }
 ];
 
 const whackState = {
@@ -1055,4 +1055,5 @@ resetPlayer();
 
 </body>
 </html>
+
 
